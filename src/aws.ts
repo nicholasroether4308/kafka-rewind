@@ -65,7 +65,7 @@ function getKafkaBrokers(eventSource: SelfManagedEventSource): string[] {
 	return eventSource.Endpoints?.KAFKA_BOOTSTRAP_SERVERS ?? [];
 }
 
-export class Aws {
+export class AwsInterface {
 	private readonly lambda: LambdaClient;
 	private readonly secrets: SecretsManagerClient;
 
@@ -118,6 +118,7 @@ export class Aws {
 			triggers.push({
 				uuid: sourceMapping.UUID,
 				brokers: getKafkaBrokers(sourceMapping.SelfManagedEventSource),
+				topics: sourceMapping.Topics ?? [],
 				credentials: getKafkaCredentials(sourceMapping.SourceAccessConfigurations),
 			});
 		}
