@@ -1,0 +1,18 @@
+{
+	"$schema": "https://json.schemastore.org/package",
+	"name": "kafka-rewind",
+	"packageManager": "yarn@4.1.0",
+	"scripts": {
+		"build": "swc -o ./dist/index.js ./src/index.ts",
+		"start": "yarn build && node ./dist/index.js"
+	},
+	"devDependencies": {
+		"@swc/cli": "^0.3.9",
+		"@swc/core": "^1.4.2",
+		"@types/node": "^20.11.20",
+		"typescript": "^5.3.3"
+	},
+	"dependencies": {
+		"@swc/helpers": "^0.5.6"
+	}
+}
