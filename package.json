@@ -1,6 +1,7 @@
 {
 	"$schema": "https://json.schemastore.org/package",
 	"name": "kafka-rewind",
+	"type": "module",
 	"packageManager": "yarn@4.1.0",
 	"scripts": {
 		"build": "swc -o ./dist/index.js ./src/index.ts",
@@ -9,10 +10,17 @@
 	"devDependencies": {
 		"@swc/cli": "^0.3.9",
 		"@swc/core": "^1.4.2",
+		"@types/eslint": "^8",
 		"@types/node": "^20.11.20",
+		"@typescript-eslint/eslint-plugin": "^7.0.2",
+		"@typescript-eslint/parser": "^7.0.2",
+		"eslint": "^8.57.0",
+		"eslint-config-prettier": "^9.1.0",
+		"prettier": "^3.2.5",
 		"typescript": "^5.3.3"
 	},
 	"dependencies": {
-		"@swc/helpers": "^0.5.6"
+		"@swc/helpers": "^0.5.6",
+		"kafkajs": "^2.2.4"
 	}
 }
