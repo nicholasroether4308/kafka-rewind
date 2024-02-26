@@ -1,10 +1,13 @@
 {
 	"$schema": "https://json.schemastore.org/tsconfig",
 	"compilerOptions": {
+		"moduleResolution": "Node16",
 		"noEmit": true,
 		"target": "ESNext",
 		"module": "ESNext",
 		"strict": true,
+		"esModuleInterop": true,
+		"rootDir": "src"
 	},
 	"exclude": [
 		"node_modules"

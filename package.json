@@ -4,10 +4,11 @@
 	"type": "module",
 	"packageManager": "yarn@4.1.0",
 	"scripts": {
-		"build": "swc -o ./dist/index.js ./src/index.ts",
-		"start": "yarn build && node ./dist/index.js"
+		"build": "swc --delete-dir-on-start --strip-leading-paths -d dist src",
+		"start": "yarn build && yarn node ./dist/index.js"
 	},
 	"devDependencies": {
+		"@smithy/types": "^2.10.0",
 		"@swc/cli": "^0.3.9",
 		"@swc/core": "^1.4.2",
 		"@types/eslint": "^8",
@@ -20,7 +21,10 @@
 		"typescript": "^5.3.3"
 	},
 	"dependencies": {
+		"@aws-sdk/client-lambda": "^3.521.0",
+		"@aws-sdk/credential-providers": "^3.521.0",
 		"@swc/helpers": "^0.5.6",
+		"chalk": "^5.3.0",
 		"kafkajs": "^2.2.4"
 	}
 }
