@@ -10,14 +10,15 @@ export const enum LogLevel {
 	QUIET = 4,
 }
 
+const TAG_DEBUG = "DEBUG";
+const TAG_INFO = "INFO ";
+const TAG_WARNING = "WARN ";
+const TAG_ERROR = "ERROR";
+
 export function debug(message: string, ...args: unknown[]) {
 	if (globalLogLevel > LogLevel.DEBUG) return;
 	console.debug(
-		chalk(
-			chalk.white.bold("DEBUG"),
-			chalk.blackBright("-"),
-			chalk.white(message),
-		),
+		chalk(chalk.white.bold(TAG_DEBUG), chalk.blackBright("-"), chalk.white(message)),
 		...args,
 	);
 }
@@ -25,11 +26,7 @@ export function debug(message: string, ...args: unknown[]) {
 export function info(message: string, ...args: unknown[]) {
 	if (globalLogLevel > LogLevel.INFO) return;
 	console.info(
-		chalk(
-			chalk.blueBright.bold("INFO"),
-			chalk.blackBright("-"),
-			chalk.whiteBright(message),
-		),
+		chalk(chalk.blueBright.bold(TAG_INFO), chalk.blackBright("-"), chalk.whiteBright(message)),
 		...args,
 	);
 }
@@ -38,7 +35,7 @@ export function warn(message: string, body?: unknown) {
 	if (globalLogLevel > LogLevel.WARNING) return;
 	console.warn(
 		chalkStderr(
-			chalkStderr.yellowBright.bold("INFO"),
+			chalkStderr.yellowBright.bold(TAG_WARNING),
 			chalkStderr.blackBright("-"),
 			chalkStderr.yellowBright(message),
 		),
@@ -50,7 +47,7 @@ export function error(message: string, body?: unknown) {
 	if (globalLogLevel > LogLevel.ERROR) return;
 	console.error(
 		chalkStderr(
-			chalkStderr.redBright.bold("INFO"),
+			chalkStderr.redBright.bold(TAG_ERROR),
 			chalkStderr.blackBright("-"),
 			chalkStderr.redBright(message),
 		),
