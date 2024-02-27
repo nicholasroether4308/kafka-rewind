@@ -65,7 +65,7 @@ function getKafkaBrokers(eventSource: SelfManagedEventSource): string[] {
 	return eventSource.Endpoints?.KAFKA_BOOTSTRAP_SERVERS ?? [];
 }
 
-export class AwsInterface {
+export class AwsConnection {
 	private readonly lambda: LambdaClient;
 	private readonly secrets: SecretsManagerClient;
 
@@ -73,6 +73,13 @@ export class AwsInterface {
 		const credentials = getCredentials(profile);
 		this.lambda = new LambdaClient({ credentials });
 		this.secrets = new SecretsManagerClient({ credentials });
+	}
+
+	public async connect() {}
+
+	public async disconnect() {
+		this.lambda.destroy();
+		this.secrets.destroy();
 	}
 
 	private async getEventSourceMappings(
@@ -99,7 +106,7 @@ export class AwsInterface {
 		const triggers: KafkaTrigger[] = [];
 		for (const sourceMapping of sourceMappings) {
 			if (!sourceMapping.UUID) {
-				log.warn("Found event source mapping without defined UUID! Ignoring...");
+				log.warn("Found event source mapping without defined UUID. It will be ignored.");
 				continue;
 			}
 			if (!sourceMapping.SourceAccessConfigurations) {
@@ -114,9 +121,16 @@ export class AwsInterface {
 				);
 				continue;
 			}
+			if (!sourceMapping.SelfManagedKafkaEventSourceConfig?.ConsumerGroupId) {
+				log.warn(
+					`Event source ${sourceMapping.UUID} has no defined consumer group id. It will be ignored.`,
+				);
+				continue;
+			}
 			log.debug(`Discovered source mapping ${sourceMapping.UUID}`);
 			triggers.push({
 				uuid: sourceMapping.UUID,
+				consumerGroup: sourceMapping.SelfManagedKafkaEventSourceConfig.ConsumerGroupId,
 				brokers: getKafkaBrokers(sourceMapping.SelfManagedEventSource),
 				topics: sourceMapping.Topics ?? [],
 				credentials: getKafkaCredentials(sourceMapping.SourceAccessConfigurations),

@@ -11,6 +11,7 @@ export interface KafkaCredentialsLocation {
 
 export interface KafkaTrigger {
 	uuid: string;
+	groupId: string;
 	brokers: string[];
 	topics: string[];
 	credentials: KafkaCredentialsLocation[];
