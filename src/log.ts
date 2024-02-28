@@ -55,11 +55,6 @@ export function error(message: string, body?: unknown) {
 	if (body) console.warn(chalkStderr.red(body));
 }
 
-export function panic(message: string, body?: unknown): never {
-	error(message, body);
-	process.exit(1);
-}
-
 export function setLogLevel(logLevel: LogLevel) {
 	globalLogLevel = logLevel;
 }

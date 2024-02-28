@@ -9,19 +9,22 @@ import {
 } from "./common.js";
 import {
 	EventSourceMappingConfiguration,
+	GetEventSourceMappingCommand,
 	LambdaClient,
 	ListEventSourceMappingsCommand,
 	SelfManagedEventSource,
 	SourceAccessConfiguration,
 	SourceAccessType,
+	UpdateEventSourceMappingCommand,
 } from "@aws-sdk/client-lambda";
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 
-function getCredentials(profile?: string): AwsCredentialIdentityProvider {
+function getCredentials(profile?: string): AwsCredentialIdentityProvider | null {
 	try {
 		return fromIni({ profile });
 	} catch (e) {
-		log.panic(`Failed to get credentials for profile "${profile}"`, e);
+		log.error(`Failed to get credentials for profile "${profile}"`, e);
+		return null;
 	}
 }
 
@@ -66,16 +69,18 @@ function getKafkaBrokers(eventSource: SelfManagedEventSource): string[] {
 }
 
 export class AwsConnection {
-	private readonly lambda: LambdaClient;
-	private readonly secrets: SecretsManagerClient;
+	private constructor(
+		private readonly lambda: LambdaClient,
+		private readonly secrets: SecretsManagerClient,
+	) {}
 
-	constructor(profile?: string) {
+	public static async connect(profile?: string): Promise<AwsConnection | null> {
 		const credentials = getCredentials(profile);
-		this.lambda = new LambdaClient({ credentials });
-		this.secrets = new SecretsManagerClient({ credentials });
+		if (!credentials) return null;
+		const lambda = new LambdaClient({ credentials });
+		const secrets = new SecretsManagerClient({ credentials });
+		return new AwsConnection(lambda, secrets);
 	}
-
-	public async connect() {}
 
 	public async disconnect() {
 		this.lambda.destroy();
@@ -84,7 +89,7 @@ export class AwsConnection {
 
 	private async getEventSourceMappings(
 		functionName: string,
-	): Promise<EventSourceMappingConfiguration[]> {
+	): Promise<EventSourceMappingConfiguration[] | null> {
 		try {
 			const result = await this.lambda.send(
 				new ListEventSourceMappingsCommand({
@@ -92,17 +97,20 @@ export class AwsConnection {
 				}),
 			);
 			if (!result.EventSourceMappings) {
-				log.panic(`Lambda ${functionName} has no defined event source mappings`);
+				log.error(`Lambda ${functionName} has no defined event source mappings`);
+				return null;
 			}
 			return result.EventSourceMappings;
 		} catch (e) {
-			log.panic(`Failed to get event source mappings for lambda ${functionName}`, e);
+			log.error(`Failed to get event source mappings for lambda ${functionName}`, e);
+			return null;
 		}
 	}
 
-	public async getKafkaTriggers(functionName: string): Promise<KafkaTrigger[]> {
+	public async getKafkaTriggers(functionName: string): Promise<KafkaTrigger[] | null> {
 		log.info(`Examining Kafka triggers for lambda ${functionName}`);
 		const sourceMappings = await this.getEventSourceMappings(functionName);
+		if (!sourceMappings) return null;
 		const triggers: KafkaTrigger[] = [];
 		for (const sourceMapping of sourceMappings) {
 			if (!sourceMapping.UUID) {
@@ -130,7 +138,7 @@ export class AwsConnection {
 			log.debug(`Discovered source mapping ${sourceMapping.UUID}`);
 			triggers.push({
 				uuid: sourceMapping.UUID,
-				consumerGroup: sourceMapping.SelfManagedKafkaEventSourceConfig.ConsumerGroupId,
+				groupId: sourceMapping.SelfManagedKafkaEventSourceConfig.ConsumerGroupId,
 				brokers: getKafkaBrokers(sourceMapping.SelfManagedEventSource),
 				topics: sourceMapping.Topics ?? [],
 				credentials: getKafkaCredentials(sourceMapping.SourceAccessConfigurations),
@@ -175,5 +183,58 @@ export class AwsConnection {
 			log.error("Failed to obtain credentials", e);
 			return null;
 		}
+	}
+
+	private async kafkaTriggerUpdateIsComplete(
+		uuid: string,
+		enabled: boolean,
+	): Promise<boolean | null> {
+		log.info("Checking Kafka trigger status...");
+		try {
+			const result = await this.lambda.send(new GetEventSourceMappingCommand({ UUID: uuid }));
+			switch (result.State) {
+				case "Enabled":
+					return enabled;
+				case "Disabled":
+					return !enabled;
+				default:
+					return false;
+			}
+		} catch (e) {
+			log.error(`Failed to get Kafka trigger status`, e);
+			return null;
+		}
+	}
+
+	private async waitForKafkaTriggerUpdateComplete(
+		uuid: string,
+		enabled: boolean,
+	): Promise<boolean> {
+		const POLLING_INTERVAL = 2000;
+		const NUM_TRIES = 10;
+
+		for (let i = 0; i < NUM_TRIES; i++) {
+			await new Promise((res) => setTimeout(res, POLLING_INTERVAL));
+			const result = await this.kafkaTriggerUpdateIsComplete(uuid, enabled);
+			if (result == null) return false;
+			if (result == true) return true;
+		}
+
+		log.error("Kafka trigger update timed out!");
+		return false;
+	}
+
+	public async setKafkaTriggerEnabled(uuid: string, enabled: boolean): Promise<boolean> {
+		log.info(`${enabled ? "Enabling" : "Disabling"} Kafka trigger ${uuid}...`);
+		try {
+			await this.lambda.send(
+				new UpdateEventSourceMappingCommand({ UUID: uuid, Enabled: enabled }),
+			);
+		} catch (e) {
+			log.error(`Failed to ${enabled ? "enable" : "disable"} Kafka trigger ${uuid}`, e);
+			return false;
+		}
+
+		return await this.waitForKafkaTriggerUpdateComplete(uuid, enabled);
 	}
 }

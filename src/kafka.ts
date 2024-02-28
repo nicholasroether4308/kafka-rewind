@@ -1,12 +1,4 @@
-import {
-	Admin,
-	Kafka,
-	LogEntry,
-	OffsetsByTopicPartition,
-	PartitionOffset,
-	SASLOptions,
-	logLevel,
-} from "kafkajs";
+import { Admin, Kafka, LogEntry, PartitionOffset, SASLOptions, logLevel } from "kafkajs";
 import { KafkaAuthMethod, KafkaCredentials } from "./common.js";
 import * as log from "./log.js";
 
@@ -37,9 +29,12 @@ function getMechanism(method: KafkaAuthMethod): "plain" | "scram-sha-256" | "scr
 }
 
 export class KafkaConnection {
-	private readonly kafka: Admin;
+	private constructor(private readonly kafka: Admin) {}
 
-	constructor(brokers: string[], credentials: KafkaCredentials) {
+	public static async connect(
+		brokers: string[],
+		credentials: KafkaCredentials,
+	): Promise<KafkaConnection | null> {
 		log.debug("Using brokers list %j for kafka", brokers);
 		const sasl: SASLOptions = {
 			mechanism: getMechanism(credentials.method),
@@ -47,7 +42,7 @@ export class KafkaConnection {
 			password: credentials.password,
 		};
 		log.debug("Using credentials %j for kafka", sasl);
-		this.kafka = new Kafka({
+		const kafka = new Kafka({
 			clientId: "kafka-rewind",
 			brokers,
 			ssl: true,
@@ -57,13 +52,12 @@ export class KafkaConnection {
 			logLevel: logLevel.DEBUG,
 			logCreator: () => kafkaLogger,
 		}).admin();
-	}
-
-	public async connect() {
 		try {
-			await this.kafka.connect();
+			await kafka.connect();
+			return new KafkaConnection(kafka);
 		} catch (e) {
-			log.panic("Failed to connect to kafka", e);
+			log.error("Failed to connect to kafka", e);
+			return null;
 		}
 	}
 
@@ -71,20 +65,27 @@ export class KafkaConnection {
 		await this.kafka.disconnect();
 	}
 
-	public async setOffset(groupId: string, topic: string, timestamp: number) {
+	public async setOffset(groupId: string, topic: string, timestamp: number): Promise<boolean> {
 		const partitionOffsets = await this.getOffsetsForTimestamp(topic, timestamp);
+		if (!partitionOffsets) return false;
 		try {
 			await this.kafka.setOffsets({ groupId, topic, partitions: partitionOffsets });
+			return true;
 		} catch (e) {
-			log.panic(`Failed to set offsets to ${timestamp} for topic ${topic}`, e);
+			log.error(`Failed to set offsets to ${timestamp} for topic ${topic}`, e);
+			return false;
 		}
 	}
 
-	async getOffsetsForTimestamp(topic: string, timestamp: number): Promise<PartitionOffset[]> {
+	async getOffsetsForTimestamp(
+		topic: string,
+		timestamp: number,
+	): Promise<PartitionOffset[] | null> {
 		try {
 			return await this.kafka.fetchTopicOffsetsByTimestamp(topic, timestamp);
 		} catch (e) {
-			log.panic(`Failed to get partition offsets for timestamp ${timestamp}`);
+			log.error(`Failed to get partition offsets for timestamp ${timestamp}`);
+			return null;
 		}
 	}
 }
