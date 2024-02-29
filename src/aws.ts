@@ -1,12 +1,12 @@
 import { fromIni } from "@aws-sdk/credential-providers";
 import { AwsCredentialIdentityProvider } from "@smithy/types";
-import * as log from "./log.js";
+import * as log from "./log.ts";
 import {
 	KafkaCredentialsLocation,
 	KafkaAuthMethod,
 	KafkaTrigger,
 	KafkaCredentials,
-} from "./common.js";
+} from "./common.ts";
 import {
 	EventSourceMappingConfiguration,
 	GetEventSourceMappingCommand,

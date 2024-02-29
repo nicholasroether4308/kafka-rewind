@@ -1,10 +1,11 @@
-import * as log from "./log.js";
-import { AwsConnection } from "./aws.js";
+#!/usr/bin/env node
+
+import * as log from "./log.ts";
+import { AwsConnection } from "./aws.ts";
 import { program } from "commander";
-import { KafkaConnection } from "./kafka.js";
-import chalk from "chalk";
+import { KafkaConnection } from "./kafka.ts";
 import inquirer from "inquirer";
-import { KafkaCredentials, KafkaTrigger } from "./common.js";
+import { KafkaCredentials, KafkaTrigger } from "./common.ts";
 
 const VERSION = "1.0.0";
 
@@ -36,7 +37,7 @@ function getParameters(): Parameters | null {
 	const profile: string | undefined = options.profile;
 	let topics: string[] | undefined = options.topic?.split(",") ?? null;
 	const functionName: string = program.args[0];
-	let date;
+	let date: number;
 	try {
 		date = Date.parse(program.args[1]);
 		if (isNaN(date)) throw new Error("");

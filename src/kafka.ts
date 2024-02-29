@@ -1,6 +1,6 @@
 import { Admin, Kafka, LogEntry, PartitionOffset, SASLOptions, logLevel } from "kafkajs";
-import { KafkaAuthMethod, KafkaCredentials } from "./common.js";
-import * as log from "./log.js";
+import { KafkaAuthMethod, KafkaCredentials } from "./common.ts";
+import * as log from "./log.ts";
 import ora from "ora";
 
 function kafkaLogger(entry: LogEntry) {
