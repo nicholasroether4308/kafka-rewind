@@ -19,7 +19,10 @@ program
 		"specify the topic name(s) to rewind. Can be a comma-separated list.",
 	)
 	.argument("<FUNCTION_NAME>", "the name of the function to rewind")
-	.argument("<DATE>", "the date to rewind to");
+	.argument(
+		"<DATE>",
+		"the date to rewind to, in the form of either an ISO date, or an ISO datetime.",
+	);
 
 interface Parameters {
 	verbose: boolean;
