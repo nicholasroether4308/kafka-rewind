@@ -18,6 +18,7 @@ import {
 	UpdateEventSourceMappingCommand,
 } from "@aws-sdk/client-lambda";
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import ora from "ora";
 
 function getCredentials(profile?: string): AwsCredentialIdentityProvider | null {
 	try {
@@ -144,6 +145,7 @@ export class AwsConnection {
 				credentials: getKafkaCredentials(sourceMapping.SourceAccessConfigurations),
 			});
 		}
+		log.info(`${triggers.length} trigger(s) found for function`);
 		return triggers;
 	}
 
@@ -189,7 +191,7 @@ export class AwsConnection {
 		uuid: string,
 		enabled: boolean,
 	): Promise<boolean | null> {
-		log.info("Checking Kafka trigger status...");
+		log.debug("Checking Kafka trigger status...");
 		try {
 			const result = await this.lambda.send(new GetEventSourceMappingCommand({ UUID: uuid }));
 			switch (result.State) {
@@ -211,15 +213,26 @@ export class AwsConnection {
 		enabled: boolean,
 	): Promise<boolean> {
 		const POLLING_INTERVAL = 2000;
-		const NUM_TRIES = 10;
+		const NUM_TRIES = 50;
+
+		const spinner = ora(
+			`Waiting for kafka trigger ${enabled ? "startup" : "shutdown"}...`,
+		).start();
 
 		for (let i = 0; i < NUM_TRIES; i++) {
 			await new Promise((res) => setTimeout(res, POLLING_INTERVAL));
 			const result = await this.kafkaTriggerUpdateIsComplete(uuid, enabled);
-			if (result == null) return false;
-			if (result == true) return true;
+			if (result == null) {
+				spinner.stop();
+				return false;
+			}
+			if (result == true) {
+				spinner.stop();
+				return true;
+			}
 		}
 
+		spinner.stop();
 		log.error("Kafka trigger update timed out!");
 		return false;
 	}
@@ -235,6 +248,10 @@ export class AwsConnection {
 			return false;
 		}
 
-		return await this.waitForKafkaTriggerUpdateComplete(uuid, enabled);
+		const result = await this.waitForKafkaTriggerUpdateComplete(uuid, enabled);
+		if (result) {
+			log.info(`Successfully ${enabled ? "enabled" : "disabled"} Kafka trigger ${uuid}`);
+		}
+		return result;
 	}
 }

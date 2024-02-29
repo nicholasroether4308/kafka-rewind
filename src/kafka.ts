@@ -1,6 +1,7 @@
 import { Admin, Kafka, LogEntry, PartitionOffset, SASLOptions, logLevel } from "kafkajs";
 import { KafkaAuthMethod, KafkaCredentials } from "./common.js";
 import * as log from "./log.js";
+import ora from "ora";
 
 function kafkaLogger(entry: LogEntry) {
 	const message = `KafkaJS: [${entry.namespace}] ${entry.log.message}`;
@@ -74,6 +75,41 @@ export class KafkaConnection {
 		} catch (e) {
 			log.error(`Failed to set offsets to ${timestamp} for topic ${topic}`, e);
 			return false;
+		}
+	}
+
+	public async waitForEmptyGroup(groupId: string): Promise<boolean> {
+		const POLLING_INTERVAL = 10000;
+		const NUM_TRIES = 50;
+
+		const spinner = ora("Waiting for Kafka client shutdown...").start();
+
+		for (let i = 0; i < NUM_TRIES; i++) {
+			await new Promise((res) => setTimeout(res, POLLING_INTERVAL));
+			const hasConsumers = await this.groupHasConsumers(groupId);
+			if (hasConsumers == null) {
+				spinner.stop();
+				return false;
+			}
+			if (hasConsumers == false) {
+				spinner.stop();
+				return true;
+			}
+		}
+
+		spinner.stop();
+		log.error("Waiting for empty consumer group timed out");
+		return false;
+	}
+
+	async groupHasConsumers(groupId: string): Promise<boolean | null> {
+		log.debug("Checking consumer group status");
+		try {
+			const result = await this.kafka.describeGroups([groupId]);
+			return result.groups[0].members.length > 0;
+		} catch (e) {
+			log.error(`Failed to get consumer group metadata`);
+			return null;
 		}
 	}
 
