@@ -79,8 +79,8 @@ export class KafkaConnection {
 	}
 
 	public async waitForEmptyGroup(groupId: string): Promise<boolean> {
-		const POLLING_INTERVAL = 10000;
-		const NUM_TRIES = 50;
+		const POLLING_INTERVAL = 5000;
+		const NUM_TRIES = 100;
 
 		const spinner = ora("Waiting for Kafka client shutdown...").start();
 
