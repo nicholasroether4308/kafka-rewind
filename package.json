@@ -4,6 +4,9 @@
 	"version": "1.0.0",
 	"type": "module",
 	"bin": "./dist/kafka-rewind.js",
+	"files": [
+		"./dist"
+	],
 	"packageManager": "yarn@4.1.0",
 	"scripts": {
 		"build": "rollup -c",
