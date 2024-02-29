@@ -791,6 +791,7 @@ __metadata:
     "@aws-sdk/client-lambda": "npm:^3.521.0"
     "@aws-sdk/client-secrets-manager": "npm:^3.521.0"
     "@aws-sdk/credential-providers": "npm:^3.521.0"
+    "@rollup/plugin-json": "npm:^6.1.0"
     "@rollup/plugin-swc": "npm:^0.3.0"
     "@smithy/types": "npm:^2.10.0"
     "@swc/cli": "npm:^0.3.9"
@@ -812,7 +813,7 @@ __metadata:
     rollup: "npm:^4.12.0"
     typescript: "npm:^5.3.3"
   bin:
-    kafka-rewind: ./dist/index.js
+    kafka-rewind: ./dist/kafka-rewind.js
   languageName: unknown
   linkType: soft
 
@@ -872,6 +873,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rollup/plugin-json@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "@rollup/plugin-json@npm:6.1.0"
+  dependencies:
+    "@rollup/pluginutils": "npm:^5.1.0"
+  peerDependencies:
+    rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
+  peerDependenciesMeta:
+    rollup:
+      optional: true
+  checksum: 10c0/9400c431b5e0cf3088ba2eb2d038809a2b0fb2a84ed004997da85582f48cd64958ed3168893c4f2c8109e38652400ed68282d0c92bf8ec07a3b2ef2e1ceab0b7
+  languageName: node
+  linkType: hard
+
 "@rollup/plugin-swc@npm:^0.3.0":
   version: 0.3.0
   resolution: "@rollup/plugin-swc@npm:0.3.0"
@@ -888,7 +903,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/pluginutils@npm:^5.0.1":
+"@rollup/pluginutils@npm:^5.0.1, @rollup/pluginutils@npm:^5.1.0":
   version: 5.1.0
   resolution: "@rollup/pluginutils@npm:5.1.0"
   dependencies:

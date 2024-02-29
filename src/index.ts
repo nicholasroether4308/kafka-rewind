@@ -7,11 +7,11 @@ import { KafkaConnection } from "./kafka.ts";
 import inquirer from "inquirer";
 import { KafkaCredentials, KafkaTrigger } from "./common.ts";
 
-const VERSION = "1.0.0";
+import { version } from "../package.json";
 
 program
 	.name("kafka-rewind")
-	.version(VERSION)
+	.version(version)
 	.option("-v, --verbose", "print debug output")
 	.option("-P, --profile <NAME>", "specify the AWS profile to use")
 	.option(
