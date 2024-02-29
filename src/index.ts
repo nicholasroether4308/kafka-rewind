@@ -12,7 +12,7 @@ const VERSION = "1.0.0";
 program
 	.name("kafka-rewind")
 	.version(VERSION)
-	.option("-v, --verbose", "Print debug output")
+	.option("-v, --verbose", "print debug output")
 	.option("-P, --profile <NAME>", "specify the AWS profile to use")
 	.option(
 		"-t, --topic <NAMES>",
