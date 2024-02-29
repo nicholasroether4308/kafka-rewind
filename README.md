@@ -3,7 +3,7 @@
 `kafka-rewind` is a tool that allows you to reset the offset of the kafka trigger(s) of an AWS lambda to an earlier time,
 such that it can re-consume earlier events for testing.
 
-## Developer Guide
+## Developer guide
 
 ### Setup
 
@@ -23,13 +23,13 @@ yarn
 ### Running the program
 
 To run the program for testing, use the `start` command. Any arguments you pass to it will be passed
-on to the program
+on to the program.
 
 ```sh
 yarn start -- <ARGS>
 ```
 
-### Publish a new version
+### Publishing a new version
 
 To publish a new version, increase the version number in `package.json`, and then run:
 
