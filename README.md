@@ -1,15 +1,15 @@
 # kafka-rewind
 
-_kafka-rewind_ is a tool that allows you to reset the offset of the kafka trigger(s) of an AWS lambda to an earlier time,
+**kafka-rewind** is a tool that allows you to reset the offset of the kafka trigger(s) of an AWS lambda to an earlier time,
 such that it can re-consume earlier events for testing.
 
-To achieve this, _kafka-rewind_ takes a lambda name and a date. It will retrieve the metadata for the associated triggers,
-disable them, update their kafka offset, and then reenable them. _kafka-rewind_ will also automatically obtain the correct
+To achieve this, kafka-rewind takes a lambda name and a date. It will retrieve the metadata for the associated triggers,
+disable them, update their kafka offset, and then reenable them. kafka-rewind will also automatically obtain the correct
 Kafka credentials from the Secrets Manager.
 
 ## Installation guide
 
-To install _kafka-rewind_, first, make sure you have the otto-ec npm registry configured.
+To install kafka-rewind, first, make sure you have the otto-ec npm registry configured.
 
 ### Configuring the otto-ec npm registry
 
@@ -18,7 +18,7 @@ access to `read:packages` within the otto-ec organization.
 
 Afterwards, make sure the following lines are included in your `~/.npmrc` file:
 
-```.npmrc
+```npmrc
 @otto-ec:registry=https://npm.pkg.github.com/
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
